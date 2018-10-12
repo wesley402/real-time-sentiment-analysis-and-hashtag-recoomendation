@@ -1,0 +1,19 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+# virtual env
+/env
+
+
+# production
+/build
+/keys
+/tools
+
+# misc
+.DS_Store
+.env
+
+
+
+# pyc
+*.pyc
