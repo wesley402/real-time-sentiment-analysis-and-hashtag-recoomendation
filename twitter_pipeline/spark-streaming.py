@@ -6,7 +6,50 @@ import findspark
 import json, os
 import time, sys
 import pymongo_spark
-pymongo_spark.activate()
+from stanfordNLP import StanfordNLP
+import redis
+
+def detectSentiment(text):
+    nlp = StanfordNLP('http://localhost:9000')
+    output = nlp.annotate(text, properties={
+        'annotators': 'sentiment',
+        'outputFormat': 'json'
+    })
+    numOfSentence = len(output['sentences'])
+    numOfNegative, numOfNeutral,  numOfPositive= 0, 0, 0
+    for sentiment in output['sentences']:
+        if sentiment['sentimentValue'] == '1':
+            numOfNegative = numOfNegative + 1
+        elif sentiment['sentimentValue'] == '2':
+            numOfNeutral = numOfNeutral + 1
+        else:
+            numOfPositive = numOfPositive + 1
+    sentimentValue = (numOfPositive * 3 + numOfNeutral * 2 + numOfNegative) / float(numOfSentence)
+    print(type(sentiment['sentimentValue']))
+    print(sentiment['sentimentValue'])
+    print(numOfPositive)
+    print(numOfNeutral)
+    print(numOfNegative)
+    print(sentimentValue)
+    return {'sentimentValue': sentimentValue}
+
+def store_in_redis(rdd):
+    r = redis.StrictRedis(host='localhost', port=6379, db=0)
+    if r.get('numOfTweets') is not None and r.get('sentimentValue') is not None:
+        preSentimentValue = float(r.get('numOfTweets').decode('utf8')) * \
+                            float(r.get('sentimentValue').decode('utf8'))
+        curSentimentValue = preSentimentValue + rdd['sentimentValue']
+        r.set('numOfTweets', float(r.get('numOfTweets').decode('utf8')) + 1)
+        r.set('sentimentValue', curSentimentValue / float(r.get('numOfTweets').decode('utf8')))
+    else:
+        r.set('company', rdd['company'])
+        r.set('numOfTweets', 1)
+        r.set('sentimentValue', rdd['sentimentValue'])
+
+def updateRDD(rdd, dict):
+    rdd.update(dict)
+    return rdd
+
 
 # Add the streaming package and initialize
 findspark.add_packages(["org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.2"])
@@ -21,6 +64,8 @@ APP_NAME = 'sentiment'
 COMPANY = 'taiwan'
 
 sc = SparkContext(appName="PythonStreamingDirectKafkaWordCount")
+sc.addPyFile(os.path.dirname(os.path.join(os.path.realpath(__file__), 'stanfordNLP.py')))
+
 # except:
 #     conf = SparkConf().set("spark.default.paralleism", 1)
 #     spark = pyspark.sql.SparkSession.builder \
@@ -36,39 +81,22 @@ directKafkaStream = KafkaUtils.createDirectStream(
                         TOPICS,
                         {"metadata.broker.list": BROKERS})
 
-def detectSentiment(text):
-    nlp = StanfordNLP('http://localhost:9000')
-    output = nlp.annotate(, properties={
-        'annotators': 'sentiment',
-        'outputFormat': 'json'
-    })
-    numOfSentence = len(output['sentences'])
-    for sentiment in output['sentences']:
-        if sentiment['value'] == 1:
-            numOfNegative = numOfNegative + 1
-        else if sentiment['value'] == 2:
-            numOfNeutral = numOfNeutral + 1
-        else:
-            numOfPositive = numOfPositive + 1
-    return {'numOfSentence': numOfSentence, 'numOfNegative': numOfNegative,
-            'numOfNeutral': numOfNeutral, 'numOfPositive': numOfPositive}
 
-def updateRDD(rdd, dict):
-    rdd.update(dict)
-    return rdd
 
 
 parsed = directKafkaStream.map(lambda x: json.loads(x[1])) \
-                          .map(lambda x: {'created_at': x['created_at'].encode('ascii', 'ignore'),
-                                          'company': COMPANY, 'text': x['text'].encode('ascii', 'ignore')}) \
-                          .map(lambda x: updateRDD(x, detectSentiment(x, detectSentiment(x, detectSentiment( x['text']))))
+                          .map(lambda x: {'created_at': x['created_at'],
+                                          'company': COMPANY, 'text': x['text']}) \
+                          .map(lambda x: updateRDD(x, detectSentiment(x['text']))) \
+                          .map(lambda x: store_in_redis(x))
+
+parsed.pprint()
 
 
 ssc.start()
 try:
     stream_time = int(sys.argv[1])
 except:
-
     stream_time = 5
 time.sleep(stream_time*60)
 ssc.awaitTermination()
