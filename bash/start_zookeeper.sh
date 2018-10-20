@@ -2,3 +2,5 @@
 
 cd ../tools/zookeeper-3.4.12
 bin/zkServer.sh start
+
+sudo service redis-server start
