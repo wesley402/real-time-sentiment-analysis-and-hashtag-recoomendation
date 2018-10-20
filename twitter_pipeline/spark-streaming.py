@@ -17,20 +17,11 @@ def detectSentiment(text):
     })
     numOfSentence = len(output['sentences'])
     numOfNegative, numOfNeutral,  numOfPositive= 0, 0, 0
+    valueSum = 0
     for sentiment in output['sentences']:
-        if sentiment['sentimentValue'] == '1':
-            numOfNegative = numOfNegative + 1
-        elif sentiment['sentimentValue'] == '2':
-            numOfNeutral = numOfNeutral + 1
-        else:
-            numOfPositive = numOfPositive + 1
-    sentimentValue = (numOfPositive * 3 + numOfNeutral * 2 + numOfNegative) / float(numOfSentence)
-    print(type(sentiment['sentimentValue']))
-    print(sentiment['sentimentValue'])
-    print(numOfPositive)
-    print(numOfNeutral)
-    print(numOfNegative)
-    print(sentimentValue)
+        valueSum += float(sentiment['sentimentValue'])
+
+    sentimentValue = valueSum / float(numOfSentence)
     return {'sentimentValue': sentimentValue}
 
 def store_in_redis(rdd):
@@ -41,13 +32,16 @@ def store_in_redis(rdd):
         curSentimentValue = preSentimentValue + rdd['sentimentValue']
         r.set('numOfTweets', float(r.get('numOfTweets').decode('utf8')) + 1)
         r.set('sentimentValue', curSentimentValue / float(r.get('numOfTweets').decode('utf8')))
+        r.set('created_at', rdd['created_at'])
     else:
         r.set('company', rdd['company'])
         r.set('numOfTweets', 1)
         r.set('sentimentValue', rdd['sentimentValue'])
+        r.set('created_at', rdd['created_at'])
 
 def updateRDD(rdd, dict):
     rdd.update(dict)
+    print(rdd['created_at'])
     return rdd
 
 
