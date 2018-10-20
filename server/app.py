@@ -2,7 +2,6 @@ import redis
 import os, sys
 from flask import Flask, render_template, jsonify, send_from_directory
 from flask_socketio import SocketIO, send, emit
-from flask_cors import CORS
 import time
 from threading import Thread
 import eventlet
@@ -13,12 +12,16 @@ socketio = SocketIO(app)
 thread = None
 
 def background():
-    count = 0
+
+    r = redis.StrictRedis(host='localhost', port=6379, db=0)
     while True:
-        socketio.sleep(1)
-        print(count)
-        count = count + 1
-        socketio.emit('message', {'data': count}, namespace='/streaming_socket')
+        sentimentValue = r.get('sentimentValue').decode('UTF-8')
+        created_at = r.get('created_at').decode('UTF-8')
+        print(sentimentValue)
+        print(created_at)
+        socketio.emit('message',
+                      {'sentimentValue': sentimentValue, 'created_at': created_at}, namespace='/streaming_socket')
+        socketio.sleep(0.05)
 
 
 
