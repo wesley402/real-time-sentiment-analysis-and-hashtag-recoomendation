@@ -1,3 +1,7 @@
 stanfordcorenlp
 redis
 flask
+python-twitter
+tweepy
+pyspark==2.2.2
+flask_socketio
