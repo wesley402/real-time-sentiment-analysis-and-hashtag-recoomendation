@@ -3,6 +3,8 @@
 # virtual env
 /env
 
+# ng build 
+/public
 
 # production
 /build
