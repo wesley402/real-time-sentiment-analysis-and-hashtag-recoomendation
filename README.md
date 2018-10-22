@@ -1,1 +1,1 @@
-# stock-prediction-system
+# real-time-sentiment-analysis-system
