@@ -10,7 +10,6 @@ from pyspark.sql.functions import *
 from pyspark import SparkContext,SparkConf
 import shutil
 import os, sys
-import pickle
 
 #refer https://github.com/tthustla/setiment_analysis_pyspark/blob/master/Sentiment%20Analysis%20with%20PySpark.ipynb
 
@@ -25,14 +24,7 @@ sqlContext = SQLContext(sc)
 
 # load data sentiment140_clean.csv
 df = sqlContext.read.format('csv').options(header='true', inferschema='true').load('sentiment140_clean.csv')
-# first look at data
-#print(type(df))
-print(df.count())
-print(df.show(5))
-df.printSchema()
-
 df = df.dropna()
-#print(df.count())
 
 # extract feature
 (train_set, val_set, test_set) = df.randomSplit([0.98, 0.01, 0.01], seed = 2000)
@@ -63,6 +55,7 @@ print('sameModel accuracy {}'.format(accuracy))
 #output_dir = os.path.abspath('/output/model')
 filename = 'sentiment_model.pkl'
 # now you can save it to a file
-lrModel.write().save('/output')
+out_dir = os.path.abspath('output')
+lrModel.write().overwrite().save(out_dir)
 
 print("save model done!")

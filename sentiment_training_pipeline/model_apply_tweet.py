@@ -16,6 +16,9 @@ import shutil
 conf = ps.SparkConf().setAll([('spark.executor.memory', '8g'), ('spark.executor.cores', '3'), ('spark.cores.max', '3'), ('spark.driver.memory','8g')])
 #sc.stop()
 sc = ps.SparkContext(conf=conf)
+train_df = None
+lr = LogisticRegression(maxIter=100)
+lrModel = lr.fit(train_df)
 
 from pyspark.ml.classification import LogisticRegressionModel
 output_dir = 'output/model_rgr'
