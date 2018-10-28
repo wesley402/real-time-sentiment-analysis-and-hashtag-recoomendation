@@ -3,7 +3,7 @@
 # virtual env
 /env
 
-# ng build 
+# ng build
 /public
 
 # production
@@ -16,6 +16,9 @@
 .env
 
 
-
 # pyc
 *.pyc
+
+# training data
+/sentiment_training_pipeline/*.csv
+/sentiment_training_pipeline/*.txt
