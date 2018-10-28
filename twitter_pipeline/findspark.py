@@ -1,3 +1,5 @@
+# https://github.com/minrk/findspark/blob/master/findspark.py
+
 """Find spark home, and initialize by adding pyspark to sys.path.
 If SPARK_HOME is defined, it will be used to put pyspark on sys.path.
 Otherwise, common locations for spark (currently only Homebrew's default) will be searched.
@@ -7,7 +9,8 @@ from glob import glob
 import os
 import sys
 
-SPARK_HOME = '/home/wesley/Projects/stock-prediction-system/tools/spark-2.2.2-bin-hadoop2.7'
+SPARK_HOME = os.path.abspath('../tools/spark-2.2.2-bin-hadoop2.7')
+print(SPARK_HOME)
 __version__ = '1.4.1.dev'
 
 
@@ -116,7 +119,7 @@ def init(spark_home=None, python_path=None, edit_rc=False, edit_profile=False):
 
     if not python_path:
         python_path = os.environ.get('PYSPARK_PYTHON', sys.executable)
-
+        #python_path = os.path.abspath('../env/bin/python')
     # ensure SPARK_HOME is defined
     os.environ['SPARK_HOME'] = spark_home
 

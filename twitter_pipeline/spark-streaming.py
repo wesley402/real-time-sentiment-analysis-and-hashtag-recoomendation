@@ -5,7 +5,6 @@ from pyspark.streaming import StreamingContext
 import findspark
 import json, os
 import time, sys
-import pymongo_spark
 from stanfordNLP import StanfordNLP
 import redis
 
@@ -48,9 +47,6 @@ def updateRDD(rdd, dict):
 # Add the streaming package and initialize
 findspark.add_packages(["org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.2"])
 findspark.init()
-# Create a local StreamingContext with two working thread and batch interval of 1 second
-#sc = SparkContext("local[2]", "NetworkWordCount")
-#ssc = StreamingContext(sc, 1)
 TOPICS = ['taiwan']
 BROKERS = "localhost:9092"
 PERIOD = 10
