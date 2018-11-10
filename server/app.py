@@ -35,7 +35,7 @@ def serve_static(filename):
 
 @app.route('/api/stream', methods=['GET'])
 def streaming():
-    print('start!!!!!!!!!!!!streaming!!!!!!!!!')
+    print('start streaming!!')
     global thread
     if thread is None:
         thread = Thread(target=background)

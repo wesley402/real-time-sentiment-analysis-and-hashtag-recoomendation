@@ -15,10 +15,7 @@ class TwitterStreamListener(StreamListener):
         print (status)
 
 class TwitterStreaming():
-    access_token = "1041437647405817856-DMEnXPH9ONfol0fo2ohxAlLC8lIrYu"
-    access_token_secret = "WhqIb7px5Gk0F9rh2sULXnCESsRSlKSMUMra6FZ4Et81N"
-    consumer_key = "Y8ywKhDnHFgBZ1e9anyBz5c3v"
-    consumer_secret = "xwyUWJvA2i7PcdWM6HFMB7c4tFyprXFuhh5z2S7k5Lzuvr9Urf"
+
     stream = None
     auth = None
     tsl = None
