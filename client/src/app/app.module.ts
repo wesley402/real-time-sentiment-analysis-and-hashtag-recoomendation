@@ -4,11 +4,13 @@ import { HttpClientModule } from "@angular/common/http";
 import { AppComponent } from './app.component';
 import { HttpModule } from "@angular/http";
 import { TrendingByTimeComponent } from './components/trending-by-time/trending-by-time.component';
+import { QueryComponent } from './components/query/query.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    TrendingByTimeComponent
+    TrendingByTimeComponent,
+    QueryComponent
   ],
   imports: [
     BrowserModule,

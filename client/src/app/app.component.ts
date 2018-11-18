@@ -11,12 +11,10 @@ import { Http, Response, Headers } from '@angular/http';
 })
 
 export class AppComponent {
-  messages: JSON[] = [];
-  ioConnection: any;
   msg: any;
+
   constructor(private http: Http, private socketService: SocketService) {
   }
-
 
   ngOnInit(): void {
     this.initIoConnection();
@@ -41,15 +39,6 @@ export class AppComponent {
       });
   }
 
-  private startStream(): void {
-    // const requestOptions = {
-    //   headers: new Headers({ 'Content-Type': 'application/json' })
-    // };
-       this.http.get('/api/stream')
-      .toPromise()
-      .then();
-
-  }
 
 
 }
