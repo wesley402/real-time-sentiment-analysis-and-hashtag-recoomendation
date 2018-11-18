@@ -15,7 +15,8 @@
 .DS_Store
 .env
 
-
+# key
+keys/
 # pyc
 *.pyc
 
