@@ -15,17 +15,19 @@ class TwitterStreamListener(StreamListener):
         print (status)
 
 class TwitterStreaming():
-
-    stream = None
-    auth = None
-    tsl = None
     def __init__(self):
+        with open('../keys/twitter_key.txt','r') as key:
+            lines = key.readlines()
+            self.access_token = lines[1].rstrip('\n')
+            self.access_token_secret = lines[3].rstrip('\n')
+            self.consumer_key = lines[5].rstrip('\n')
+            self.consumer_secret = lines[7].rstrip('\n')
         self.auth = OAuthHandler(self.consumer_key, self.consumer_secret)
         self.auth.set_access_token(self.access_token, self.access_token_secret)
         self.tsl = TwitterStreamListener()
+        self.stream = Stream(self.auth, self.tsl)
 
     def start(self, keywords):
-        self.stream = Stream(self.auth, self.tsl)
         self.stream.filter(track=keywords, async=True)
 
     def stop(self):
