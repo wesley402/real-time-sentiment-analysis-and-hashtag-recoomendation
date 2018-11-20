@@ -5,6 +5,8 @@ from flask_socketio import SocketIO, send, emit
 import time
 from threading import Thread
 import eventlet
+import json
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'twitter_pipeline'))
 from twitterStreaming import TwitterStreaming
 
@@ -38,7 +40,9 @@ def serve_static(filename):
 
 @app.route('/api/streaming/start', methods=['POST'])
 def start_streaming():
-    kws = 'taiwan'
+    kws = []
+    data = request.get_json()
+    kws.append(data['query'])
     global ts_thread
     if ts_thread is None:
         print('start streaming!!')
