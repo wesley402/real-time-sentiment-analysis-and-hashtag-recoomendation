@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { SocketService } from '../../services/socket.service';
-import { Http, Response, Headers } from '@angular/http';
+import { Http, Response, Headers, RequestOptions } from '@angular/http';
 
 @Component({
   selector: 'app-query',
@@ -20,12 +20,11 @@ export class QueryComponent implements OnInit {
 
 
   private startStreaming(value: string): void { // without type info
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
     this.keywords = value;
-    this.http.post('/api/streaming/start', {
-      params: {
-        query: this.keywords
-      }
-    })
+    let data = { "query": this.keywords }
+    this.http.post('/api/streaming/start', data, options)
     .toPromise()
     .then();
   }
