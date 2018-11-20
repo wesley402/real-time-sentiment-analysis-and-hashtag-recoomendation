@@ -4,4 +4,4 @@ import time
 if __name__ == '__main__':
     twitterStreaming = TwitterStreaming()
     print("start streaming")
-    twitterStreaming.start({'woman'})
+    twitterStreaming.start(['taiwan'])

@@ -25,9 +25,9 @@ class TwitterStreaming():
         self.auth = OAuthHandler(self.consumer_key, self.consumer_secret)
         self.auth.set_access_token(self.access_token, self.access_token_secret)
         self.tsl = TwitterStreamListener()
-        self.stream = Stream(self.auth, self.tsl)
 
     def start(self, keywords):
+        self.stream = Stream(self.auth, self.tsl)        
         self.stream.filter(track=keywords, async=True)
 
     def stop(self):
