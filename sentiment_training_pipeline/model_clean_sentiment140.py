@@ -5,11 +5,11 @@ from nltk.tokenize import WordPunctTokenizer
 from bs4 import BeautifulSoup
 import re
 
+#refer https://github.com/tthustla/setiment_analysis_pyspark/blob/master/Sentiment%20Analysis%20with%20PySpark.ipynb
 plt.style.use('fivethirtyeight')
 
 cols = ['sentiment','id','date','query_string','user','text']
-df = pd.read_csv("sentiment140.csv",header=None, names=cols,sep=',', encoding='ISO-8859-1')
-#df = pd.read_csv("training.1600000.processed.noemoticon.csv",header=None, names=cols,sep=',', encoding='latin-1')
+df = pd.read_csv("../sentiment_training_pipeline/sentiment140.csv",header=None, names=cols,sep=',', encoding='ISO-8859-1')
 
 #print(df.head())
 #df.info()
@@ -70,7 +70,4 @@ print(len(clean_tweet_texts))
 clean_df = pd.DataFrame(clean_tweet_texts,columns=['text'])
 clean_df['target'] = df.sentiment
 print(clean_df.head())
-clean_df.to_csv('sentiment140_clean.csv',encoding='utf-8')
-# csv = 'clean_tweet.csv'
-# my_df = pd.read_csv(csv,index_col=0)
-# print(my_df.head())
+clean_df.to_csv('../sentiment_training_pipeline/sentiment140_clean.csv',encoding='utf-8')
