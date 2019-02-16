@@ -11,33 +11,14 @@ import { Http, Response, Headers } from '@angular/http';
 })
 
 export class AppComponent {
-  msg: any;
 
   constructor(private http: Http, private socketService: SocketService) {
   }
 
   ngOnInit(): void {
-    this.initIoConnection();
   }
 
-  private initIoConnection(): void {
-    console.log('init connection');
-    this.socketService.initSocket();
-    this.socketService.onMessage()
-      .subscribe((message: any) => {
-          this.msg = message;
-      });
 
-    this.socketService.onEvent(Event.CONNECT)
-      .subscribe(() => {
-        console.log('connected');
-      });
-
-    this.socketService.onEvent(Event.DISCONNECT)
-      .subscribe(() => {
-        console.log('disconnected');
-      });
-  }
 
 
 

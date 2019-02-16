@@ -3,9 +3,10 @@ import os, sys
 from flask import Flask, render_template, jsonify, send_from_directory, request
 from flask_socketio import SocketIO, send, emit
 import time
-from threading import Thread
+from threading import Thread, Event
 import eventlet
 import json
+from datetime import *
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'twitter_pipeline'))
 from twitterStreaming import TwitterStreaming
@@ -15,19 +16,55 @@ base_dir = os.path.abspath('../public')
 app = Flask(__name__, template_folder=base_dir)
 socketio = SocketIO(app)
 ts_thread = None
+s_thread = None
 
-def background():
+class sentimentValueStreaming(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.r = redis.StrictRedis(host='localhost', port=6379, db=0)
+        print('set up')
+        self.p = self.r.pubsub()
+        self.p.subscribe('sentimentData')
+        self.event = Event()
 
-    r = redis.StrictRedis(host='localhost', port=6379, db=0)
-    while True:
-        sentimentValue = r.get('sentimentValue').decode('UTF-8')
-        created_at = r.get('created_at').decode('UTF-8')
-        print(sentimentValue)
-        print(created_at)
-        socketio.emit('message',
-                      {'sentimentValue': sentimentValue, 'created_at': created_at}, namespace='/streaming_socket')
-        socketio.sleep(0.05)
+    def run(self):
+        print('start calculate value!!')
+        time_format = '%a %b %d %H:%M:%S %z %Y'
+        preTime = None
+        curTime = None
+        s_sum = 0
+        s_count = 0
+        while not self.event.is_set(): # <---- Added
+            message = self.p.get_message()
+            if message and isinstance(message['data'], bytes):
+                sentimentData = json.loads(message['data'].decode('utf8'))
+                curTime = datetime.strptime(sentimentData['created_at'], time_format)
+                if preTime is None:
+                    preTime = curTime
+                    s_count += 1
+                else:
+                    if preTime.time() > curTime.time():
+                        continue
+                    elif preTime.time() == curTime.time():
+                        s_sum += int(sentimentData['sentimentValue'])
+                        s_count += 1
+                    else:
+                        sentimentValue = s_sum / s_count
+                        created_at = str(curTime.hour).zfill(2) + ':' + \
+                                     str(curTime.minute).zfill(2) + ':' + \
+                                     str(curTime.second).zfill(2)
+                        socketio.emit('message',
+                              {'created_at': created_at, 'sentimentValue': sentimentValue},
+                              namespace='/streaming_socket')
+                        print(created_at + '   ' + str(sentimentValue))
+                        s_sum = int(sentimentData['sentimentValue'])
+                        s_count = 1
+                        preTime = curTime
 
+            socketio.sleep(0.00001)
+    def stop(self):
+        print('stop calculate value!!')
+        self.event.set()
 
 
 @app.route('/')
@@ -44,10 +81,13 @@ def start_streaming():
     data = request.get_json()
     kws.append(data['query'])
     global ts_thread
-    if ts_thread is None:
+    global s_thread
+    if ts_thread is None and s_thread is None:
         print('start streaming!!')
         ts_thread = TwitterStreaming()
+        s_thread = sentimentValueStreaming()
         ts_thread.start(keywords=kws)
+        s_thread.start()
     else:
         print('stop first, then start streaming!!')
         ts_thread.stop()
@@ -58,9 +98,13 @@ def start_streaming():
 @app.route('/api/streaming/stop', methods=['POST'])
 def stop_streaming():
     global ts_thread
+    global s_thread
+
     print('stop streaming!!')
     if ts_thread is not None:
         ts_thread.stop()
+    if s_thread is not None:
+        s_thread.stop()
 
     return 'stop streaming'
 

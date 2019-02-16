@@ -24,8 +24,6 @@ export class SocketService {
       this.socket.on('message', (data) => {
         observer.next(data);
         console.log("SASAS");
-        console.log(data);
-        console.log(typeof(data));
         });
     });
   }

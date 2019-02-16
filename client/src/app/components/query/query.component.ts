@@ -12,8 +12,7 @@ export class QueryComponent implements OnInit {
   messages: JSON[] = [];
   ioConnection: any;
 
-  constructor(private http: Http, private socketService: SocketService) {
-  }
+  constructor(private http: Http, private socketService: SocketService) {}
 
   ngOnInit() {
   }

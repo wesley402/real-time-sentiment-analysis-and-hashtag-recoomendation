@@ -9,7 +9,7 @@ class TwitterStreamListener(StreamListener):
         self.producer = SimpleProducer(kafkaClient)
     def on_data(self, data):
         self.producer.send_messages("taiwan", data.encode('utf-8'))
-        print (data)
+        #print (data)
         return True
     def on_error(self, status):
         print (status)
@@ -27,7 +27,7 @@ class TwitterStreaming():
         self.tsl = TwitterStreamListener()
 
     def start(self, keywords):
-        self.stream = Stream(self.auth, self.tsl)        
+        self.stream = Stream(self.auth, self.tsl)
         self.stream.filter(track=keywords, async=True)
 
     def stop(self):

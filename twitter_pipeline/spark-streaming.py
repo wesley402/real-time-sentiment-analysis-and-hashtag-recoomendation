@@ -7,6 +7,9 @@ import json, os
 import time, sys
 from stanfordNLP import StanfordNLP
 import redis
+from pyspark.ml import Pipeline, PipelineModel
+
+
 
 def detectSentiment(text):
     nlp = StanfordNLP('http://localhost:9000')
@@ -25,18 +28,25 @@ def detectSentiment(text):
 
 def store_in_redis(rdd):
     r = redis.StrictRedis(host='localhost', port=6379, db=0)
-    if r.get('numOfTweets') is not None and r.get('sentimentValue') is not None:
-        preSentimentValue = float(r.get('numOfTweets').decode('utf8')) * \
-                            float(r.get('sentimentValue').decode('utf8'))
-        curSentimentValue = preSentimentValue + rdd['sentimentValue']
-        r.set('numOfTweets', float(r.get('numOfTweets').decode('utf8')) + 1)
-        r.set('sentimentValue', curSentimentValue / float(r.get('numOfTweets').decode('utf8')))
-        r.set('created_at', rdd['created_at'])
-    else:
-        r.set('company', rdd['company'])
-        r.set('numOfTweets', 1)
-        r.set('sentimentValue', rdd['sentimentValue'])
-        r.set('created_at', rdd['created_at'])
+    sentimentData = {'created_at': rdd['created_at'], 'sentimentValue': rdd['sentimentValue']}
+    j_sentimentData = json.dumps(sentimentData)
+    print(j_sentimentData)
+    r.publish('sentimentData', j_sentimentData)
+
+
+    # if r.get('numOfTweets') is not None and r.get('sentimentValue') is not None:
+    #     preSentimentValue = float(r.get('numOfTweets').decode('utf8')) * \
+    #                         float(r.get('sentimentValue').decode('utf8'))
+    #     curSentimentValue = preSentimentValue + rdd['sentimentValue']
+    #     r.set('numOfTweets', float(r.get('numOfTweets').decode('utf8')) + 1)
+    #     r.set('sentimentValue', curSentimentValue / float(r.get('numOfTweets').decode('utf8')))
+    #     r.set('created_at', rdd['created_at'])
+    # else:
+    #     r.set('company', rdd['company'])
+    #     r.set('numOfTweets', 1)
+    #     r.set('sentimentValue', rdd['sentimentValue'])
+    #     r.set('created_at', rdd['created_at'])
+
 
 def updateRDD(rdd, dict):
     rdd.update(dict)
@@ -44,17 +54,17 @@ def updateRDD(rdd, dict):
     return rdd
 
 
+
 # Add the streaming package and initialize
 findspark.add_packages(["org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.2"])
 findspark.init()
 TOPICS = ['taiwan']
 BROKERS = "localhost:9092"
-PERIOD = 10
+PERIOD = 0.3
 APP_NAME = 'sentiment'
-COMPANY = 'taiwan'
 
 sc = SparkContext(appName="PythonStreamingDirectKafkaWordCount")
-sc.addPyFile(os.path.dirname(os.path.join(os.path.realpath(__file__), 'stanfordNLP.py')))
+#sc.addPyFile(os.path.dirname(os.path.join(os.path.realpath(__file__), 'stanfordNLP.py')))
 
 # except:
 #     conf = SparkConf().set("spark.default.paralleism", 1)
@@ -66,19 +76,30 @@ sc.addPyFile(os.path.dirname(os.path.join(os.path.realpath(__file__), 'stanfordN
     # sc = spark.sparkContext
 #create a streaming context with batch interval 10 sec
 ssc = StreamingContext(sc, PERIOD)
+
+modelPath = '../sentiment_training_pipeline/output/tfidf_logistic_pipelineModel'
+loadedPipelineModel = PipelineModel.load(modelPath)
+
 directKafkaStream = KafkaUtils.createDirectStream(
                         ssc,
                         TOPICS,
                         {"metadata.broker.list": BROKERS})
 
 
-
-
+#
+#
 parsed = directKafkaStream.map(lambda x: json.loads(x[1])) \
-                          .map(lambda x: {'created_at': x['created_at'],
-                                          'company': COMPANY, 'text': x['text']}) \
+                          .map(lambda x: {'created_at': x['created_at'],'text': x['text']}) \
                           .map(lambda x: updateRDD(x, detectSentiment(x['text']))) \
                           .map(lambda x: store_in_redis(x))
+# 
+#
+# parsed = directKafkaStream.map(lambda x: json.loads(x[1])) \
+#                            .map(lambda x: {'created_at': x['created_at'],'text': x['text']}) \
+#                            .map(lambda x:)
+#                            .map(lambda x: updateRDD(x, detectSentiment(x['text']))) \
+#                            .map(lambda x: store_in_redis(x))
+
 
 parsed.pprint()
 
