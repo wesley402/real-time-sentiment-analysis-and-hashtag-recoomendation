@@ -1,4 +1,3 @@
-# real-time-sentiment-analysis-system
+[Project Report.pdf](https://github.com/wesley402/real-time-sentiment-analysis-and-hashtag-recoomendation/blob/master/project-report.pdf)
 
-# training model is in the /sentiment_training_pipeline
-# model_regression_tfidf.py
+
